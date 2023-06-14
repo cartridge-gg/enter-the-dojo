@@ -3,9 +3,7 @@ mod Create {
     use traits::Into;
     use box::BoxTrait;
     use array::ArrayTrait;
-
-    use dojo_core::integer::{u250, ContractAddressIntoU250, U32IntoU250};
-
+    
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};

@@ -35,7 +35,13 @@ mod Attack {
         opponent_id: felt252,
         action: Action,
         damage: u8,
-        killing_blow: bool,
+    ) {}
+
+    #[event]
+    fn GameOver(
+        game_id: felt252,
+        winner: felt252,
+        loser: felt252,
     ) {}
 
     fn execute(ctx: Context, game_id: felt252, action: Action) {
@@ -118,7 +124,11 @@ mod Attack {
             })
         );
 
-        PlayerAttacked(game_id, player_id, opponent_id, action, damage, killing_blow);
+        PlayerAttacked(game_id, player_id, opponent_id, action, damage);
+
+        if killing_blow {
+            GameOver(game_id, player_id, opponent_id);
+        }
     }
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {
