@@ -1,10 +1,10 @@
 const MAX_HEALTH: u8 = 100;
-const MAX_SPECIALS: u8 = 4;
+const MAX_SPECIALS: u8 = 3;
 
 // Punch has the lowest damage and highest 
 // probability of landing
 const PUNCH_DAMAGE: u8 = 10;
-const PUNCH_CHANCE: u8 = 90; 
+const PUNCH_CHANCE: u8 = 90;
 
 // Kick has higher damage and slightly lower chance
 const KICK_DAMAGE: u8 = 15;

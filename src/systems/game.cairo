@@ -3,13 +3,13 @@ mod Create {
     use traits::Into;
     use box::BoxTrait;
     use array::ArrayTrait;
-    
+
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
     #[event]
-    fn GameCreated(game_id: felt252, creator: felt252) {}
+    fn GameCreated(game_id: u32, creator: felt252) {}
 
     fn execute(ctx: Context) {
         // getting the origin of the caller from context
@@ -20,7 +20,7 @@ mod Create {
 
         // create game entity
         commands::set_entity(
-            (game_id, (0)).into_partitioned(), // key parts = /game_id
+            game_id.into(), // key parts = /game_id
             (Game {
                 player_one: player_id, // creator auto joins game
                 player_two: 0,
@@ -32,11 +32,11 @@ mod Create {
 
         // create player entity
         commands::set_entity(
-            (game_id, (player_id)).into_partitioned(), // key parts = /game_id/player_id 
+            (game_id, player_id).into(), // key parts = /game_id/player_id 
             (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
         )
 
-        GameCreated(game_id.into(), player_id);
+        GameCreated(game_id, player_id);
         ()
     }
 }
@@ -52,19 +52,18 @@ mod Join {
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
     #[event]
-    fn PlayerJoined(game_id: felt252, player_id: felt252) {}
+    fn PlayerJoined(game_id: u32, player_id: felt252) {}
 
-    fn execute(ctx: Context, game_id: felt252) {
+    fn execute(ctx: Context,  game_id: u32) {
         let player_id: felt252 = ctx.caller_account.into();
 
-        let game = commands::<Game>::entity((game_id, (0)).into_partitioned());
+        let game = commands::<Game>::entity(game_id.into());
         assert(game.player_one != player_id, 'own game');
-        assert(game.player_one != 0, 'no game');
         assert(game.player_two == 0, 'game full');
 
         // update game entity
         commands::set_entity(
-            (game_id, (0)).into_partitioned(),
+            game_id.into(),
             (Game {
                 player_one: game.player_one,
                 player_two: player_id,
@@ -76,7 +75,7 @@ mod Join {
 
         // create player entity
         commands::set_entity(
-            (game_id, (player_id)).into_partitioned(), // key parts = /game_id/player_id 
+            (game_id, player_id).into(), // key parts = /game_id/player_id 
             (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
         )
 

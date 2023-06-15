@@ -10,7 +10,7 @@ impl ActionIntoFelt252 of Into<Action, felt252> {
         match self {
             Action::Punch(()) => 0,
             Action::Kick(()) => 1,
-            Action::Special(()) => 3,
+            Action::Special(()) => 2,
         }
     }
 }
@@ -30,35 +30,26 @@ mod Attack {
 
     #[event]
     fn PlayerAttacked(
-        game_id: felt252,
-        player_id: felt252,
-        opponent_id: felt252,
-        action: Action,
-        damage: u8,
+        game_id: u32, player_id: felt252, opponent_id: felt252, action: Action, damage: u8, 
     ) {}
 
     #[event]
-    fn GameOver(
-        game_id: felt252,
-        winner: felt252,
-        loser: felt252,
-    ) {}
+    fn GameOver(game_id: u32, winner: felt252, loser: felt252, ) {}
 
-    fn execute(ctx: Context, game_id: felt252, action: Action) {
+    fn execute(ctx: Context, game_id: u32, action: Action) {
         // gets player address
         let player_id: felt252 = ctx.caller_account.into();
 
         // read game entity
-        let game_sk = (game_id, (0)).into_partitioned();
+        let game_sk: Query = game_id.into();
         let game = commands::<Game>::entity(game_sk);
 
         // game condition checking
         assert(game.winner == 0, 'game already over');
         assert(game.next_to_move == player_id, 'not your turn');
-        assert(game.is_playing(player_id), 'not your game');
 
         // retrieve own player
-        let player_sk = (game_id, (player_id)).into_partitioned();
+        let player_sk: Query = (game_id, player_id).into();
         let (health, special) = commands::<(Health, Special)>::entity(player_sk);
 
         // check if attack is special and is valid
@@ -82,7 +73,7 @@ mod Attack {
         } else {
             game.player_one
         };
-        let opponent_sk = (game_id, (opponent_id)).into_partitioned();
+        let opponent_sk: Query = (game_id, opponent_id).into();
         let (health, special) = commands::<(Health, Special)>::entity(opponent_sk);
 
         // cacluate damage, use VRF for seed in the future
@@ -133,13 +124,13 @@ mod Attack {
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {
         match action {
-            Action::Punch(()) => hit_chance(seed, PUNCH_CHANCE, PUNCH_DAMAGE),
-            Action::Kick(()) => hit_chance(seed, KICK_CHANCE, KICK_DAMAGE),
-            Action::Special(()) => hit_chance(seed, SPECIAL_CHANCE, SPECIAL_DAMAGE),
+            Action::Punch(()) => chance_hit(seed, PUNCH_CHANCE, PUNCH_DAMAGE),
+            Action::Kick(()) => chance_hit(seed, KICK_CHANCE, KICK_DAMAGE),
+            Action::Special(()) => chance_hit(seed, SPECIAL_CHANCE, SPECIAL_DAMAGE),
         }
     }
 
-    fn hit_chance(seed: felt252, likelihood: u8, damage: u8) -> u8 {
+    fn chance_hit(seed: felt252, likelihood: u8, damage: u8) -> u8 {
         let seed: u256 = seed.into();
         let result: u128 = seed.low % 100;
 
