@@ -38,9 +38,11 @@ mod Attack {
         assert(game.winner == 0, 'game already over');
         assert(game.next_to_move == player_id, 'not your turn');
 
-        // retrieve own player
+        // only retrieve own player's special component
+        // we don't care about health component as it does 
+        // not get updated
         let player_sk: Query = (game_id, player_id).into();
-        let (health, special) = commands::<(Health, Special)>::entity(player_sk);
+        let special = commands::<Special>::entity(player_sk);
 
         // check if attack is special and is valid
         if action == Action::Special(()) {
@@ -48,12 +50,7 @@ mod Attack {
 
             commands::set_entity(
                 player_sk, // player storage key
-                (
-                    health, // health stays the same
-                     Special {
-                        remaining: special.remaining - 1 // decrement special 
-                    }
-                )
+                 (Special { remaining: special.remaining - 1 })
             );
         }
 
@@ -67,11 +64,13 @@ mod Attack {
         } else {
             game.player_one
         };
+        // only retrieve health for opponent player as their 
+        // special component does not get updated
         let opponent_sk: Query = (game_id, opponent_id).into();
-        let (health, special) = commands::<(Health, Special)>::entity(opponent_sk);
+        let health = commands::<Health>::entity(opponent_sk);
 
         // check if killing blow
-        let killing_blow = if damage > health.amount {
+        let killing_blow = if damage >= health.amount {
             damage = health.amount;
             true
         } else {
@@ -81,12 +80,7 @@ mod Attack {
         // update opponent health
         commands::set_entity(
             opponent_sk, // opponent storage key
-            (
-                special, // special stays the same
-                 Health {
-                    amount: health.amount - damage // decrement health
-                }
-            )
+             (Health { amount: health.amount - damage })
         );
 
         // update game state
