@@ -54,12 +54,12 @@ mod Join {
     #[event]
     fn PlayerJoined(game_id: u32, player_id: felt252) {}
 
-    fn execute(ctx: Context,  game_id: u32) {
+    fn execute(ctx: Context, game_id: u32) {
         let player_id: felt252 = ctx.caller_account.into();
 
         let game = commands::<Game>::entity(game_id.into());
-        assert(game.player_one != player_id, 'own game');
-        assert(game.player_two == 0, 'game full');
+        assert(game.player_one != player_id, 'cannot join own game');
+        assert(game.player_two == 0, 'game is full');
 
         // update game entity
         commands::set_entity(

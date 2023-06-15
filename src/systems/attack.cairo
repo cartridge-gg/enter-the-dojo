@@ -5,16 +5,6 @@ enum Action {
     Special: (),
 }
 
-impl ActionIntoFelt252 of Into<Action, felt252> {
-    fn into(self: Action) -> felt252 {
-        match self {
-            Action::Punch(()) => 0,
-            Action::Kick(()) => 1,
-            Action::Special(()) => 2,
-        }
-    }
-}
-
 #[system]
 mod Attack {
     use array::ArrayTrait;
@@ -67,6 +57,10 @@ mod Attack {
             );
         }
 
+        // cacluate damage, use VRF for seed in the future
+        let seed = starknet::get_tx_info().unbox().transaction_hash;
+        let mut damage = calculate_damage(seed, action);
+
         // opposing player
         let opponent_id = if game.player_one == player_id {
             game.player_two
@@ -75,10 +69,6 @@ mod Attack {
         };
         let opponent_sk: Query = (game_id, opponent_id).into();
         let (health, special) = commands::<(Health, Special)>::entity(opponent_sk);
-
-        // cacluate damage, use VRF for seed in the future
-        let seed = starknet::get_tx_info().unbox().transaction_hash;
-        let mut damage = calculate_damage(seed, action);
 
         // check if killing blow
         let killing_blow = if damage > health.amount {
