@@ -32,7 +32,7 @@ mod Attack {
 
         // read game entity
         let game_sk: Query = game_id.into();
-        let game = commands::<Game>::entity(game_sk);
+        let game = get !(ctx, game_sk, Game);
 
         // game condition checking
         assert(game.winner == 0, 'game already over');
@@ -42,16 +42,13 @@ mod Attack {
         // we don't care about health component as it does 
         // not get updated
         let player_sk: Query = (game_id, player_id).into();
-        let special = commands::<Special>::entity(player_sk);
+        let special = get !(ctx, player_sk, Special);
 
         // check if attack is special and is valid
         if action == Action::Special(()) {
             assert(special.remaining > 0, 'no specials left');
 
-            commands::set_entity(
-                player_sk, // player storage key
-                 (Special { remaining: special.remaining - 1 })
-            );
+            set !(ctx, player_sk, (Special { remaining: special.remaining - 1 }));
         }
 
         // cacluate damage, use VRF for seed in the future
@@ -67,7 +64,7 @@ mod Attack {
         // only retrieve health for opponent player as their 
         // special component does not get updated
         let opponent_sk: Query = (game_id, opponent_id).into();
-        let health = commands::<Health>::entity(opponent_sk);
+        let health = get !(ctx, opponent_sk, Health);
 
         // check if killing blow
         let killing_blow = if damage >= health.amount {
@@ -78,13 +75,11 @@ mod Attack {
         };
 
         // update opponent health
-        commands::set_entity(
-            opponent_sk, // opponent storage key
-             (Health { amount: health.amount - damage })
-        );
+        set !(ctx, opponent_sk, (Health { amount: health.amount - damage }));
 
         // update game state
-        commands::set_entity(
+        set !(
+            ctx,
             game_sk,
             (Game {
                 player_one: game.player_one,

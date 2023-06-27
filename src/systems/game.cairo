@@ -16,11 +16,12 @@ mod Create {
         let player_id: felt252 = ctx.caller_account.into();
 
         // generate an id that is unique to to this world
-        let game_id = commands::uuid();
+        let game_id = ctx.world.uuid();
 
         // create game entity
-        commands::set_entity(
-            game_id.into(), // key parts = /game_id
+        set !(
+            ctx,
+            game_id.into(),
             (Game {
                 player_one: player_id, // creator auto joins game
                 player_two: 0,
@@ -31,8 +32,9 @@ mod Create {
         )
 
         // create player entity
-        commands::set_entity(
-            (game_id, player_id).into(), // key parts = /game_id/player_id 
+        set !(
+            ctx,
+            (game_id, player_id).into(),
             (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
         )
 
@@ -57,12 +59,13 @@ mod Join {
     fn execute(ctx: Context, game_id: u32) {
         let player_id: felt252 = ctx.caller_account.into();
 
-        let game = commands::<Game>::entity(game_id.into());
+        let game = get !(ctx, game_id.into(), Game);
         assert(game.player_one != player_id, 'cannot join own game');
         assert(game.player_two == 0, 'game is full');
 
         // update game entity
-        commands::set_entity(
+        set !(
+            ctx,
             game_id.into(),
             (Game {
                 player_one: game.player_one,
@@ -74,9 +77,10 @@ mod Join {
         )
 
         // create player entity
-        commands::set_entity(
-            (game_id, player_id).into(), // key parts = /game_id/player_id 
-            (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
+        set !(
+            ctx,
+            (game_id, player_id).into(),
+            (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS }),
         )
 
         PlayerJoined(game_id, player_id);
