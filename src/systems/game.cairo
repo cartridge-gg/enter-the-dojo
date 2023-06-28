@@ -4,12 +4,16 @@ mod Create {
     use box::BoxTrait;
     use array::ArrayTrait;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[event]
-    fn GameCreated(game_id: u32, creator: felt252) {}
+    #[derive(Drop, Serde)]
+    struct GameCreated {
+        game_id: u32,
+        creator: felt252
+    }
 
     fn execute(ctx: Context) {
         // getting the origin of the caller from context
@@ -38,7 +42,10 @@ mod Create {
             (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
         )
 
-        GameCreated(game_id, player_id);
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(@GameCreated { game_id, creator: player_id }, ref values);
+        emit(ctx, 'GameCreated', values.span());
+
         ()
     }
 }
@@ -49,12 +56,16 @@ mod Join {
     use box::BoxTrait;
     use array::ArrayTrait;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[event]
-    fn PlayerJoined(game_id: u32, player_id: felt252) {}
+    #[derive(Drop, Serde)]
+    struct PlayerJoined {
+        game_id: u32,
+        player_id: felt252
+    }
 
     fn execute(ctx: Context, game_id: u32) {
         let player_id: felt252 = ctx.caller_account.into();
@@ -83,7 +94,10 @@ mod Join {
             (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS }),
         )
 
-        PlayerJoined(game_id, player_id);
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(@PlayerJoined { game_id, player_id }, ref values);
+        emit(ctx, 'PlayerJoined', values.span());
+
         ()
     }
 }

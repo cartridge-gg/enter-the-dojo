@@ -12,19 +12,28 @@ mod Attack {
     use traits::Into;
     use super::Action;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::{Game, GameTrait};
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{
         PUNCH_DAMAGE, KICK_DAMAGE, SPECIAL_DAMAGE, PUNCH_CHANCE, KICK_CHANCE, SPECIAL_CHANCE
     };
 
-    #[event]
-    fn PlayerAttacked(
-        game_id: u32, player_id: felt252, opponent_id: felt252, action: Action, damage: u8, 
-    ) {}
+    #[derive(Drop, Serde)]
+    struct PlayerAttacked {
+        game_id: u32,
+        player_id: felt252,
+        opponent_id: felt252,
+        action: Action,
+        damage: u8,
+    }
 
-    #[event]
-    fn GameOver(game_id: u32, winner: felt252, loser: felt252, ) {}
+    #[derive(Drop, Serde)]
+    struct GameOver {
+        game_id: u32,
+        winner: felt252,
+        loser: felt252,
+    }
 
     fn execute(ctx: Context, game_id: u32, action: Action) {
         // gets player address
@@ -94,10 +103,18 @@ mod Attack {
             })
         );
 
-        PlayerAttacked(game_id, player_id, opponent_id, action, damage);
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(
+            @PlayerAttacked { game_id, player_id, opponent_id, action, damage }, ref values
+        );
+        emit(ctx, 'PlayerAttacked', values.span());
 
         if killing_blow {
-            GameOver(game_id, player_id, opponent_id);
+            let mut values = array::ArrayTrait::new();
+            serde::Serde::serialize(
+                @GameOver { game_id, winner: player_id, loser: opponent_id }, ref values
+            );
+            emit(ctx, 'GameOver', values.span());
         }
     }
 
