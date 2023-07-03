@@ -6,58 +6,58 @@ enum Action {
 }
 
 #[system]
-mod Attack {
+mod attack {
     use array::ArrayTrait;
     use box::BoxTrait;
     use traits::Into;
     use super::Action;
+    use starknet::{ContractAddress, Zeroable};
 
-    use enter_the_dojo::events::emit;
+    use dojo::world::Context;
+
     use enter_the_dojo::components::game::{Game, GameTrait};
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{
         PUNCH_DAMAGE, KICK_DAMAGE, SPECIAL_DAMAGE, PUNCH_CHANCE, KICK_CHANCE, SPECIAL_CHANCE
     };
 
-    #[derive(Drop, Serde)]
+    #[derive(Drop, starknet::Event)]
     struct PlayerAttacked {
         game_id: u32,
-        player_id: felt252,
-        opponent_id: felt252,
+        player_id: ContractAddress,
+        opponent_id: ContractAddress,
         action: Action,
         damage: u8,
     }
 
-    #[derive(Drop, Serde)]
+    #[derive(Drop, starknet::Event)]
     struct GameOver {
         game_id: u32,
-        winner: felt252,
-        loser: felt252,
+        winner: ContractAddress,
+        loser: ContractAddress,
     }
 
     fn execute(ctx: Context, game_id: u32, action: Action) {
         // gets player address
-        let player_id: felt252 = ctx.caller_account.into();
+        let player_id = ctx.origin;
 
         // read game entity
-        let game_sk: Query = game_id.into();
-        let game = get !(ctx, game_sk, Game);
+        let mut game = get !(ctx.world, game_id, (Game));
 
         // game condition checking
-        assert(game.winner == 0, 'game already over');
+        assert(game.winner.is_zero(), 'game already over');
         assert(game.next_to_move == player_id, 'not your turn');
 
         // only retrieve own player's special component
         // we don't care about health component as it does 
         // not get updated
-        let player_sk: Query = (game_id, player_id).into();
-        let special = get !(ctx, player_sk, Special);
+        let mut special = get !(ctx.world, (game_id, player_id).into(), (Special));
 
         // check if attack is special and is valid
         if action == Action::Special(()) {
             assert(special.remaining > 0, 'no specials left');
-
-            set !(ctx, player_sk, (Special { remaining: special.remaining - 1 }));
+            special.remaining -= 1;
+            set !(ctx.world, (special));
         }
 
         // cacluate damage, use VRF for seed in the future
@@ -72,8 +72,7 @@ mod Attack {
         };
         // only retrieve health for opponent player as their 
         // special component does not get updated
-        let opponent_sk: Query = (game_id, opponent_id).into();
-        let health = get !(ctx, opponent_sk, Health);
+        let mut health = get !(ctx.world, (game_id, opponent_id).into(), (Health));
 
         // check if killing blow
         let killing_blow = if damage >= health.amount {
@@ -84,38 +83,20 @@ mod Attack {
         };
 
         // update opponent health
-        set !(ctx, opponent_sk, (Health { amount: health.amount - damage }));
+        health.amount -= damage;
+        set !(ctx.world, (health));
+        emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
 
         // update game state
-        set !(
-            ctx,
-            game_sk,
-            (Game {
-                player_one: game.player_one,
-                player_two: game.player_two,
-                next_to_move: opponent_id,
-                num_moves: game.num_moves + 1,
-                winner: if killing_blow {
-                    player_id
-                } else {
-                    0
-                }
-            })
-        );
-
-        let mut values = array::ArrayTrait::new();
-        serde::Serde::serialize(
-            @PlayerAttacked { game_id, player_id, opponent_id, action, damage }, ref values
-        );
-        emit(ctx, 'PlayerAttacked', values.span());
-
-        if killing_blow {
-            let mut values = array::ArrayTrait::new();
-            serde::Serde::serialize(
-                @GameOver { game_id, winner: player_id, loser: opponent_id }, ref values
-            );
-            emit(ctx, 'GameOver', values.span());
-        }
+        game.next_to_move = opponent_id;
+        game.num_moves += 1;
+        game.winner = if killing_blow {
+            emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
+            player_id
+        } else {
+            Zeroable::zero()
+        };
+        set !( ctx.world, (game));
     }
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {

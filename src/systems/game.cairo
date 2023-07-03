@@ -1,102 +1,92 @@
 #[system]
-mod Create {
+mod create {
     use traits::Into;
     use box::BoxTrait;
     use array::ArrayTrait;
+    use starknet::{ContractAddress, Zeroable};
 
-    use enter_the_dojo::events::emit;
+    use dojo::world::Context;
+
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[derive(Drop, Serde)]
+    #[derive(Drop, starknet::Event)]
     struct GameCreated {
         game_id: u32,
-        creator: felt252
+        creator: ContractAddress
     }
 
     fn execute(ctx: Context) {
         // getting the origin of the caller from context
-        let player_id: felt252 = ctx.caller_account.into();
+        let player_id = ctx.origin;
 
         // generate an id that is unique to to this world
         let game_id = ctx.world.uuid();
 
         // create game entity
         set !(
-            ctx,
-            game_id.into(),
+            ctx.world,
             (Game {
+                game_id,
                 player_one: player_id, // creator auto joins game
-                player_two: 0,
-                next_to_move: 0,
-                num_moves: 0,
-                winner: 0,
+                player_two: Zeroable::zero(),
+                next_to_move: Zeroable::zero(),
+                num_moves: Zeroable::zero(),
+                winner: Zeroable::zero(),
             })
         )
 
         // create player entity
         set !(
-            ctx,
-            (game_id, player_id).into(),
-            (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS })
+            ctx.world,
+            (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS })
         )
 
-        let mut values = array::ArrayTrait::new();
-        serde::Serde::serialize(@GameCreated { game_id, creator: player_id }, ref values);
-        emit(ctx, 'GameCreated', values.span());
+        emit!(ctx.world, GameCreated { game_id, creator: player_id });
 
         ()
     }
 }
 
 #[system]
-mod Join {
+mod join {
     use traits::Into;
     use box::BoxTrait;
     use array::ArrayTrait;
+    use starknet::{ContractAddress, Zeroable};
 
-    use enter_the_dojo::events::emit;
+    use dojo::world::Context;
+
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[derive(Drop, Serde)]
+    #[derive(Drop, starknet::Event)]
     struct PlayerJoined {
         game_id: u32,
-        player_id: felt252
+        player_id: ContractAddress
     }
 
     fn execute(ctx: Context, game_id: u32) {
-        let player_id: felt252 = ctx.caller_account.into();
+        let player_id = ctx.origin;
 
-        let game = get !(ctx, game_id.into(), Game);
+        let mut game = get !(ctx.world, game_id, (Game));
         assert(game.player_one != player_id, 'cannot join own game');
-        assert(game.player_two == 0, 'game is full');
+        assert(game.player_two.is_zero(), 'game is full');
 
         // update game entity
-        set !(
-            ctx,
-            game_id.into(),
-            (Game {
-                player_one: game.player_one,
-                player_two: player_id,
-                next_to_move: game.player_one,
-                num_moves: 0,
-                winner: 0,
-            })
-        )
+        game.player_two = player_id;
+        game.next_to_move = game.player_one;
+        set !(ctx.world, (game));
 
         // create player entity
         set !(
-            ctx,
-            (game_id, player_id).into(),
-            (Health { amount: MAX_HEALTH }, Special { remaining: MAX_SPECIALS }),
+            ctx.world,
+            (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS }),
         )
 
-        let mut values = array::ArrayTrait::new();
-        serde::Serde::serialize(@PlayerJoined { game_id, player_id }, ref values);
-        emit(ctx, 'PlayerJoined', values.span());
+        emit!(ctx.world, PlayerJoined {game_id, player_id });
 
         ()
     }

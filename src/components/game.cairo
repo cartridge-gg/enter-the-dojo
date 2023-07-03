@@ -1,18 +1,22 @@
-#[derive(Component, Copy, Drop, Serde)]
+use starknet::ContractAddress;
+
+#[derive(Component, Copy, Drop, Serde, SerdeLen)]
 struct Game {
-    player_one: felt252,
-    player_two: felt252,
-    next_to_move: felt252,
+    #[key]
+    game_id: u32,
+    player_one: ContractAddress,
+    player_two: ContractAddress,
+    next_to_move: ContractAddress,
     num_moves: u32,
-    winner: felt252,
+    winner: ContractAddress,
 }
 
 trait GameTrait {
-    fn is_playing(self: @Game, player_id: felt252) -> bool;
+    fn is_playing(self: @Game, player_id: ContractAddress) -> bool;
 }
 
 impl GameImpl of GameTrait {
-    fn is_playing(self: @Game, player_id: felt252) -> bool {
+    fn is_playing(self: @Game, player_id: ContractAddress) -> bool {
         if player_id == *self.player_one {
             return true;
         }
