@@ -70,6 +70,7 @@ mod attack {
         } else {
             game.player_one
         };
+
         // only retrieve health for opponent player as their 
         // special component does not get updated
         let mut health = get !(ctx.world, (game_id, opponent_id).into(), (Health));

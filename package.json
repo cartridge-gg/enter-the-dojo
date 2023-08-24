@@ -1,0 +1,47 @@
+{
+  "name": "enter-the-dojo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write ./src",
+    "gen": "graphql-codegen --config codegen.yaml"
+  },
+  "dependencies": {
+    "@chakra-ui/anatomy": "^2.1.1",
+    "@chakra-ui/react": "^2.5.1",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "eslint": "8.47.0",
+    "eslint-config-next": "13.4.19",
+    "framer-motion": "^10.5.0",
+    "graphql": "^16.3.0",
+    "graphql-request": "^5.0.0",
+    "js-cookie": "^3.0.5",
+    "next": "13.4.19",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-query": "^3.39.2",
+    "starknet": "https://github.com/broody/starknet.js#551eece1857ecf8f81671ca87afc198de5ef2a5a",
+    "typescript": "^5.0.3"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/fragment-matcher": "^3.2.1",
+    "@graphql-codegen/introspection": "^2.1.1",
+    "@graphql-codegen/schema-ast": "^2.4.1",
+    "@graphql-codegen/typescript": "^2.4.8",
+    "@graphql-codegen/typescript-graphql-request": "^5.0.0",
+    "@graphql-codegen/typescript-operations": "^2.3.5",
+    "@graphql-codegen/typescript-react-query": "^3.5.9",
+    "@types/howler": "^2.2.7",
+    "@types/js-cookie": "^3.0.3",
+    "@types/node": "18.15.3",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
+    "prettier": "^2.8.8"
+  }
+}
