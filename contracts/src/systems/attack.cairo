@@ -15,13 +15,14 @@ mod attack {
 
     use dojo::world::Context;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::{Game, GameTrait};
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{
         PUNCH_DAMAGE, KICK_DAMAGE, SPECIAL_DAMAGE, PUNCH_CHANCE, KICK_CHANCE, SPECIAL_CHANCE
     };
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Drop, Serde)]
     struct PlayerAttacked {
         game_id: u32,
         player_id: ContractAddress,
@@ -30,7 +31,7 @@ mod attack {
         damage: u8,
     }
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Drop, Serde)]
     struct GameOver {
         game_id: u32,
         winner: ContractAddress,
@@ -86,13 +87,27 @@ mod attack {
         // update opponent health
         health.amount -= damage;
         set !(ctx.world, (health));
-        emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
+
+        // emit player attacked
+        //emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(
+            @PlayerAttacked { game_id, player_id, opponent_id, action, damage }, ref values
+        );
+        emit(ctx, 'PlayerAttacked', values.span());
 
         // update game state
         game.next_to_move = opponent_id;
         game.num_moves += 1;
         game.winner = if killing_blow {
-            emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
+            // emit game over 
+            //emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
+            let mut values = array::ArrayTrait::new();
+            serde::Serde::serialize(
+                @GameOver { game_id, winner: player_id, loser: opponent_id }, ref values
+            );
+            emit(ctx, 'GameOver', values.span());
+
             player_id
         } else {
             Zeroable::zero()
