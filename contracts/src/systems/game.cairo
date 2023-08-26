@@ -7,11 +7,12 @@ mod create {
 
     use dojo::world::Context;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Drop, Serde)]
     struct GameCreated {
         game_id: u32,
         creator: ContractAddress
@@ -43,7 +44,11 @@ mod create {
             (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS })
         )
 
-        emit!(ctx.world, GameCreated { game_id, creator: player_id });
+        // emit game created
+        //emit!(ctx.world, GameCreated { game_id, creator: player_id });
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(@GameCreated { game_id, creator: player_id }, ref values);
+        emit(ctx, 'GameCreated', values.span());
 
         ()
     }
@@ -58,11 +63,12 @@ mod join {
 
     use dojo::world::Context;
 
+    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
 
-    #[derive(Drop, starknet::Event)]
+    #[derive(Drop, Serde)]
     struct PlayerJoined {
         game_id: u32,
         player_id: ContractAddress
@@ -86,7 +92,11 @@ mod join {
             (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS }),
         )
 
-        emit!(ctx.world, PlayerJoined {game_id, player_id });
+        // emit player joined
+        //emit!(ctx.world, PlayerJoined {game_id, player_id });
+        let mut values = array::ArrayTrait::new();
+        serde::Serde::serialize(@PlayerJoined { game_id, player_id }, ref values);
+        emit(ctx, 'PlayerJoined', values.span());
 
         ()
     }
