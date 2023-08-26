@@ -1,7 +1,7 @@
 #[derive(Serde, Copy, Drop, PartialEq)]
 enum Action {
-    Punch: (),
-    Kick: (),
+    Light: (),
+    Heavy: (),
     Special: (),
 }
 
@@ -19,7 +19,7 @@ mod attack {
     use enter_the_dojo::components::game::{Game, GameTrait};
     use enter_the_dojo::components::player::{Health, Special};
     use enter_the_dojo::constants::{
-        PUNCH_DAMAGE, KICK_DAMAGE, SPECIAL_DAMAGE, PUNCH_CHANCE, KICK_CHANCE, SPECIAL_CHANCE
+        LIGHT_DAMAGE, HEAVY_DAMAGE, SPECIAL_DAMAGE, LIGHT_CHANCE, HEAVY_CHANCE, SPECIAL_CHANCE
     };
 
     #[derive(Drop, Serde)]
@@ -117,8 +117,8 @@ mod attack {
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {
         match action {
-            Action::Punch(()) => chance_hit(seed, PUNCH_CHANCE, PUNCH_DAMAGE),
-            Action::Kick(()) => chance_hit(seed, KICK_CHANCE, KICK_DAMAGE),
+            Action::Light(()) => chance_hit(seed, LIGHT_CHANCE, LIGHT_DAMAGE),
+            Action::Heavy(()) => chance_hit(seed, HEAVY_CHANCE, HEAVY_DAMAGE),
             Action::Special(()) => chance_hit(seed, SPECIAL_CHANCE, SPECIAL_DAMAGE),
         }
     }
