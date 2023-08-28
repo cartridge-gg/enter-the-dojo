@@ -37,23 +37,30 @@ export default function Home() {
 
   useEffect(() => {
     if (!game) {
-      setGameState(GameState.CREATE_GAME);
-      return;
+      return setGameState(GameState.CREATE_GAME);
+      
     }
 
     if (game.playerOne !== account?.address && game.playerTwo === "0x0") {
-      setGameState(GameState.CAN_JOIN);
-    } else if (game.nextToMove === account?.address) {
-      setGameState(GameState.CAN_ATTACK);
-    } else if (game.playerTwo === "0x0") {
-      setGameState(GameState.WAIT_FOR_JOIN);
-    } else if (
+      return setGameState(GameState.CAN_JOIN);
+    }
+    
+    if (game.nextToMove === account?.address) {
+      return setGameState(GameState.CAN_ATTACK);
+    } 
+    
+    if (game.playerTwo === "0x0") {
+      return setGameState(GameState.WAIT_FOR_JOIN);
+    } 
+    
+    if (
       game.nextToMove !== account?.address &&
       (game.playerOne === account?.address ||
         game.playerTwo === account?.address)
     ) {
-      setGameState(GameState.WAIT_FOR_OPPONENT);
+      return setGameState(GameState.WAIT_FOR_OPPONENT);
     }
+    
   }, [account, game]);
 
   return (
