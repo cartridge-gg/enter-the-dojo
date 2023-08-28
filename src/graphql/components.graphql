@@ -1,0 +1,18 @@
+# Available games defined as where player two has not yet joined. Relay connection used for pagination https://relay.dev/graphql/connections.htm
+query AvailableGames($first: Int, $after: Cursor, $last: Int, $before: Cursor) {
+  gameComponents(
+    first: $first
+    after: $after
+    last: $last
+    before: $before
+    where: { player_two: "0x0" }
+  ) {
+    totalCount
+    edges {
+      cursor
+      node {
+        player_one
+      }
+    }
+  }
+}

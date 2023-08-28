@@ -1,54 +1,39 @@
 import { InvokeTransactionReceiptResponse, num, shortString } from "starknet";
 
-export enum RyoEvents {
+export enum DojoEvents {
   GameCreated = "GameCreated",
+  GameOver = "GameOver",
   PlayerJoined = "PlayerJoined",
-  Traveled = "Traveled",
-  Bought = "Bought",
-  Sold = "Sold",
-  RandomEvent = "RandomEvent",
+  PlayerAttacked = "PlayerAttacked",
 }
 
 export interface BaseEventData {
   gameId: string;
 }
 
-export interface RandomEventData extends BaseEventData {
-  playerId: string;
-  healthLoss: number;
-  mugged: boolean;
-  arrested: boolean;
-}
-
-export interface CreateEventData extends BaseEventData {
+export interface CreatedEventData extends BaseEventData {
   creator: string;
-  startTime: number;
-  maxTurns: number;
-  maxPlayers: number;
 }
 
 export interface JoinedEventData extends BaseEventData {
   playerId: string;
-  locationName: string;
 }
 
-export interface BoughtEventData extends BaseEventData {
+export interface AttackedEventData extends BaseEventData {
   playerId: string;
-  drugId: string;
-  quantity: number;
-  price: number;
+  opponentId: string;
+  action: number;
+  damage: number;
 }
 
-export interface SoldEventData extends BaseEventData {
-  playerId: string;
-  drugId: string;
-  quantity: number;
-  price: number;
+export interface OverEventData extends BaseEventData {
+  winner: string;
+  loser: string;
 }
 
 export const parseEvent = (
   receipt: InvokeTransactionReceiptResponse,
-  eventType: RyoEvents,
+  eventType: DojoEvents,
 ): BaseEventData => {
   const raw = receipt.events?.find(
     (e) => shortString.decodeShortString(e.keys[0]) === eventType,
@@ -59,34 +44,35 @@ export const parseEvent = (
   }
 
   switch (eventType) {
-    case RyoEvents.GameCreated:
+    case DojoEvents.GameCreated:
       return {
         gameId: num.toHexString(raw.data[0]),
         creator: num.toHexString(raw.data[1]),
-        startTime: Number(raw.data[2]),
-        maxTurns: Number(raw.data[3]),
-        maxPlayers: Number(raw.data[4]),
-      } as CreateEventData;
+      } as CreatedEventData;
 
-    case RyoEvents.RandomEvent:
+    case DojoEvents.PlayerJoined:
       return {
         gameId: num.toHexString(raw.data[0]),
         playerId: num.toHexString(raw.data[1]),
-        healthLoss: Number(raw.data[2]),
-        mugged: Boolean(raw.data[3] === "0x1"),
-        arrested: Boolean(raw.data[4] === "0x1"),
-      } as RandomEventData;
-
-    case RyoEvents.PlayerJoined:
-      return {
-        gameId: num.toHexString(raw.data[0]),
-        playerId: num.toHexString(raw.data[1]),
-        locationName: shortString.decodeShortString(raw.data[2]),
       } as JoinedEventData;
 
-    case RyoEvents.Traveled:
-    case RyoEvents.Bought:
-    case RyoEvents.Sold:
+    case DojoEvents.PlayerAttacked:
+      return {
+        gameId: num.toHexString(raw.data[0]),
+        playerId: num.toHexString(raw.data[1]),
+        opponentId: num.toHexString(raw.data[2]),
+        action: Number(raw.data[3]),
+        damage: Number(raw.data[4]),
+      } as JoinedEventData;
+
+    case DojoEvents.GameOver:
+      return {
+        gameId: num.toHexString(raw.data[0]),
+        winner: num.toHexString(raw.data[1]),
+        loser: num.toHexString(raw.data[2]),
+      } as OverEventData;
+
+    default:
       throw new Error(`event parse not implemented: ${eventType}`);
   }
 };
