@@ -32,3 +32,26 @@ query PlayersEntity($playerOneId: ID!, $playerTwoId: ID!) {
     }
   }
 }
+
+query Entities($gameId: String!) {
+  entities(keys: [$gameId]) {
+    totalCount
+    edges {
+      node {
+        keys
+        components {
+          __typename
+          ... on Game {
+            player_one
+            player_two
+            next_to_move
+            winner
+          }
+          ... on Health {
+            amount
+          }
+        }
+      }
+    }
+  }
+}

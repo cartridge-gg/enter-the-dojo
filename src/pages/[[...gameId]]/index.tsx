@@ -1,9 +1,8 @@
 import { Header } from "@/components/Header";
 import { Hero, HeroType } from "@/components/Hero";
 import { useDojo } from "@/hooks/dojo";
-import { useGameEntity } from "@/hooks/dojo/entities/useGameEntity";
-import { usePlayersEntity } from "@/hooks/dojo/entities/usePlayersEntity";
-import { Action, useSystems } from "@/hooks/dojo/useSystems";
+import { useEntities } from "@/hooks/dojo/useEntities";
+import { useSystems } from "@/hooks/dojo/useSystems";
 import { Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -24,13 +23,8 @@ export default function Home() {
   const { account } = useDojo();
   const { create, join, isPending } = useSystems();
 
-  const { game } = useGameEntity({
+  const { game, playerOne, playerTwo } = useEntities({
     gameId: gameId && gameId[0],
-  });
-  const { playerOne, playerTwo } = usePlayersEntity({
-    gameId: gameId && gameId[0],
-    oneAddress: game?.playerOne,
-    twoAddress: game?.playerTwo,
   });
 
   const [gameState, setGameState] = useState<GameState>(GameState.CREATE_GAME);
@@ -38,21 +32,20 @@ export default function Home() {
   useEffect(() => {
     if (!game) {
       return setGameState(GameState.CREATE_GAME);
-      
     }
 
     if (game.playerOne !== account?.address && game.playerTwo === "0x0") {
       return setGameState(GameState.CAN_JOIN);
     }
-    
+
     if (game.nextToMove === account?.address) {
       return setGameState(GameState.CAN_ATTACK);
-    } 
-    
+    }
+
     if (game.playerTwo === "0x0") {
       return setGameState(GameState.WAIT_FOR_JOIN);
-    } 
-    
+    }
+
     if (
       game.nextToMove !== account?.address &&
       (game.playerOne === account?.address ||
@@ -60,7 +53,6 @@ export default function Home() {
     ) {
       return setGameState(GameState.WAIT_FOR_OPPONENT);
     }
-    
   }, [account, game]);
 
   return (
@@ -93,13 +85,15 @@ export default function Home() {
             >
               <Hero
                 type={HeroType.One}
-                playerEntity={playerOne}
+                health={playerOne?.health}
                 address={game?.playerOne}
+                isAction={game?.nextToMove === game?.playerOne}
               />
               <Hero
                 type={HeroType.Two}
-                playerEntity={playerTwo}
+                health={playerTwo?.health}
                 address={game?.playerTwo}
+                isAction={game?.nextToMove === game?.playerTwo}
                 isMirrored
               />
             </HStack>

@@ -1,11 +1,9 @@
 import { useDojo } from "@/hooks/dojo";
-import { useGameEntity } from "@/hooks/dojo/entities/useGameEntity";
-import { PlayerEntity } from "@/hooks/dojo/entities/usePlayersEntity";
+import { useEntities } from "@/hooks/dojo/useEntities";
 import { Action, useSystems } from "@/hooks/dojo/useSystems";
 import { formatAddress } from "@/utils/contract";
 import {
   Box,
-  Image,
   Text,
   keyframes,
   Flex,
@@ -14,7 +12,7 @@ import {
   Button,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const MAX_HEALTH = 100;
 
@@ -25,8 +23,8 @@ export enum HeroType {
 
 enum PlayerState {
   IDLE = "idle",
-  ATTACK_ONE = "attack_one",
-  ATTACK_TWO = "attack_two",
+  ATTACK_LIGHT = "attack_one",
+  ATTACK_HEAVY = "attack_two",
   TAKE_HIT = "take_hit",
 }
 
@@ -39,22 +37,24 @@ const animation = keyframes`
 export const Hero = ({
   type,
   address,
-  playerEntity,
+  health,
+  isAction = false,
   isMirrored = false,
 }: {
   type: HeroType;
   address?: string;
-  playerEntity?: PlayerEntity;
+  health?: number;
+  isAction?: boolean;
   isMirrored?: boolean;
 }) => {
   const router = useRouter();
   const { gameId } = router.query as { gameId: string };
   const [state, setState] = useState<PlayerState>(PlayerState.IDLE);
   const [isYou, setIsYou] = useState(false);
-  const [health, setHealth] = useState<number>(0);
-  const { attack, isPending } = useSystems();
+
   const { account } = useDojo();
-  const { game } = useGameEntity({
+  const { attack, isPending } = useSystems();
+  const { game } = useEntities({
     gameId: gameId && gameId[0],
   });
 
@@ -64,11 +64,22 @@ export const Hero = ({
     }
   }, [account, address]);
 
-  useEffect(() => {
-    if (playerEntity) {
-      setHealth(Number(playerEntity.health!));
-    }
-  }, [playerEntity]);
+  // listen to game updates
+  useEffect(() => {}, [game]);
+
+  const attackLight = useCallback(()=>{
+    setState(PlayerState.ATTACK_LIGHT);
+    setTimeout(() => {
+      setState(PlayerState.IDLE);
+    }, type === HeroType.One ? 1000 : 500); // hack: animateion length diff between two pngs
+  }, []);
+
+  const attackHeavy = useCallback(()=>{
+    setState(PlayerState.ATTACK_HEAVY);
+    setTimeout(() => {
+      setState(PlayerState.IDLE);
+    }, type === HeroType.One ? 1000 : 500);
+  }, []);
 
   return (
     <>
@@ -86,10 +97,10 @@ export const Hero = ({
               <Text transform={isMirrored ? "scaleX(-1)" : ""} fontSize="10px">
                 {isYou ? "You" : address ? formatAddress(address) : "..."}
               </Text>
-              <HealthBar health={health} />
+              <HealthBar health={health || 0} />
             </VStack>
 
-            {isYou && game?.nextToMove === address && (
+            {isYou && isAction && (
               <HStack
                 position="absolute"
                 bottom="0"
@@ -99,8 +110,8 @@ export const Hero = ({
                   size="sm"
                   onClick={async () => {
                     if (gameId) {
+                      attackLight();
                       const result = await attack(gameId[0], Action.Light);
-                      console.log(result);
                     }
                   }}
                   isLoading={isPending}
@@ -111,8 +122,8 @@ export const Hero = ({
                   size="sm"
                   onClick={async () => {
                     if (gameId) {
+                      attackHeavy();
                       const result = await attack(gameId[0], Action.Heavy);
-                      console.log(result);
                     }
                   }}
                   isLoading={isPending}
