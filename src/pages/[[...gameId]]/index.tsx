@@ -3,6 +3,7 @@ import { Hero, HeroType } from "@/components/Hero";
 import { useDojo } from "@/hooks/dojo";
 import { useEntities } from "@/hooks/dojo/useEntities";
 import { useSystems } from "@/hooks/dojo/useSystems";
+import { formatAddress } from "@/utils/contract";
 import { Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -32,6 +33,10 @@ export default function Home() {
   useEffect(() => {
     if (!game) {
       return setGameState(GameState.CREATE_GAME);
+    }
+
+    if (game.winner !== "0x0") {
+      return setGameState(GameState.END);
     }
 
     if (game.playerOne !== account?.address && game.playerTwo === "0x0") {
@@ -132,6 +137,15 @@ export default function Home() {
 
                 {gameState === GameState.WAIT_FOR_OPPONENT && (
                   <Text>Opponent to move</Text>
+                )}
+
+                {gameState === GameState.END && (
+                  <Text>
+                    Winner:
+                    {game?.winner === account?.address
+                      ? "You"
+                      : formatAddress(game?.winner!)}
+                  </Text>
                 )}
               </HStack>
             )}
