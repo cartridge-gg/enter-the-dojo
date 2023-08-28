@@ -13,7 +13,7 @@ import {
   shortString,
   TransactionStatus,
 } from "starknet";
-import { useBurner } from "../burner";
+import { useBurner } from "../useBurner";
 
 export const SCALING_FACTOR = 10000;
 export const REFETCH_INTERVAL = 1000; // really need graphql subscriptions...
