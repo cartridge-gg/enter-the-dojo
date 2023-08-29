@@ -22,7 +22,15 @@ mod attack {
         LIGHT_DAMAGE, HEAVY_DAMAGE, SPECIAL_DAMAGE, LIGHT_CHANCE, HEAVY_CHANCE, SPECIAL_CHANCE
     };
 
-    #[derive(Drop, Serde)]
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        PlayerAttacked: PlayerAttacked,
+        GameOver: GameOver,
+    }
+    
+
+    #[derive(Drop, starknet::Event)]
     struct PlayerAttacked {
         game_id: u32,
         player_id: ContractAddress,
@@ -31,7 +39,7 @@ mod attack {
         damage: u8,
     }
 
-    #[derive(Drop, Serde)]
+    #[derive(Drop, starknet::Event)]
     struct GameOver {
         game_id: u32,
         winner: ContractAddress,
@@ -89,24 +97,14 @@ mod attack {
         set !(ctx.world, (health));
 
         // emit player attacked
-        //emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
-        let mut values = array::ArrayTrait::new();
-        serde::Serde::serialize(
-            @PlayerAttacked { game_id, player_id, opponent_id, action, damage }, ref values
-        );
-        emit(ctx, 'PlayerAttacked', values.span());
+        emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
 
         // update game state
         game.next_to_move = opponent_id;
         game.num_moves += 1;
         game.winner = if killing_blow {
             // emit game over 
-            //emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
-            let mut values = array::ArrayTrait::new();
-            serde::Serde::serialize(
-                @GameOver { game_id, winner: player_id, loser: opponent_id }, ref values
-            );
-            emit(ctx, 'GameOver', values.span());
+            emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
 
             player_id
         } else {
