@@ -9,8 +9,8 @@ mod create {
 
     use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
-    use enter_the_dojo::components::player::{Health, Special};
-    use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
+    use enter_the_dojo::components::player::{Health};
+    use enter_the_dojo::constants::{MAX_HEALTH};
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -45,13 +45,11 @@ mod create {
         )
 
         // create player entity
-        set !(
-            ctx.world,
-            (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS })
-        )
+        // TODO: Add special component
+        set !(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }))
 
         // emit game created
-        emit!(ctx.world, GameCreated { game_id, creator: player_id });
+        emit !(ctx.world, GameCreated { game_id, creator: player_id });
 
         ()
     }
@@ -68,8 +66,8 @@ mod join {
 
     use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
-    use enter_the_dojo::components::player::{Health, Special};
-    use enter_the_dojo::constants::{MAX_HEALTH, MAX_SPECIALS};
+    use enter_the_dojo::components::player::{Health};
+    use enter_the_dojo::constants::{MAX_HEALTH};
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -96,13 +94,11 @@ mod join {
         set !(ctx.world, (game));
 
         // create player entity
-        set !(
-            ctx.world,
-            (Health { game_id, player_id, amount: MAX_HEALTH }, Special { game_id, player_id, remaining: MAX_SPECIALS }),
-        )
+        // TODO: Add special component
+        set !(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }), )
 
         // emit player joined
-        emit!(ctx.world, PlayerJoined {game_id, player_id });
+        emit !(ctx.world, PlayerJoined { game_id, player_id });
 
         ()
     }

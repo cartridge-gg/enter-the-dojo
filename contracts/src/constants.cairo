@@ -1,15 +1,9 @@
 const MAX_HEALTH: u8 = 100;
-const MAX_SPECIALS: u8 = 3;
 
-// Punch has the lowest damage and will land 100%
+// Light has the lowest damage and will land 85% of the time
 const LIGHT_DAMAGE: u8 = 10;
-const LIGHT_CHANCE: u8 = 100;
+const LIGHT_CHANCE: u8 = 85;
 
-// Kick has higher damage and slightly lower chance
+// Heavy has higher damage and will land 60% of the time
 const HEAVY_DAMAGE: u8 = 20;
-const HEAVY_CHANCE: u8 = 85;
-
-// Special has the lowest probability but 
-// land two of these and it's GAME OVER!
-const SPECIAL_DAMAGE: u8 = 50;
-const SPECIAL_CHANCE: u8 = 25;
+const HEAVY_CHANCE: u8 = 60;

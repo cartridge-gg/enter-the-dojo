@@ -2,7 +2,6 @@
 enum Action {
     Light: (),
     Heavy: (),
-    Special: (),
 }
 
 #[system]
@@ -17,10 +16,8 @@ mod attack {
 
     use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::{Game, GameTrait};
-    use enter_the_dojo::components::player::{Health, Special};
-    use enter_the_dojo::constants::{
-        LIGHT_DAMAGE, HEAVY_DAMAGE, SPECIAL_DAMAGE, LIGHT_CHANCE, HEAVY_CHANCE, SPECIAL_CHANCE
-    };
+    use enter_the_dojo::components::player::{Health};
+    use enter_the_dojo::constants::{LIGHT_DAMAGE, HEAVY_DAMAGE, LIGHT_CHANCE, HEAVY_CHANCE};
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -28,7 +25,7 @@ mod attack {
         PlayerAttacked: PlayerAttacked,
         GameOver: GameOver,
     }
-    
+
 
     #[derive(Drop, starknet::Event)]
     struct PlayerAttacked {
@@ -57,17 +54,7 @@ mod attack {
         assert(game.winner.is_zero(), 'game already over');
         assert(game.next_to_move == player_id, 'not your turn');
 
-        // only retrieve own player's special component
-        // we don't care about health component as it does 
-        // not get updated
-        let mut special = get !(ctx.world, (game_id, player_id).into(), (Special));
-
-        // check if attack is special and is valid
-        if action == Action::Special(()) {
-            assert(special.remaining > 0, 'no specials left');
-            special.remaining -= 1;
-            set !(ctx.world, (special));
-        }
+        // TODO: Add special action logic here
 
         // cacluate damage, use VRF for seed in the future
         let seed = starknet::get_tx_info().unbox().transaction_hash;
@@ -97,27 +84,28 @@ mod attack {
         set !(ctx.world, (health));
 
         // emit player attacked
-        emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
+        emit !(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
 
         // update game state
         game.next_to_move = opponent_id;
         game.num_moves += 1;
-        game.winner = if killing_blow {
-            // emit game over 
-            emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
+        game
+            .winner =
+                if killing_blow {
+                    // emit game over 
+                    emit !(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
 
-            player_id
-        } else {
-            Zeroable::zero()
-        };
-        set !( ctx.world, (game));
+                    player_id
+                } else {
+                    Zeroable::zero()
+                };
+        set !(ctx.world, (game));
     }
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {
         match action {
             Action::Light(()) => chance_hit(seed, LIGHT_CHANCE, LIGHT_DAMAGE),
             Action::Heavy(()) => chance_hit(seed, HEAVY_CHANCE, HEAVY_DAMAGE),
-            Action::Special(()) => chance_hit(seed, SPECIAL_CHANCE, SPECIAL_DAMAGE),
         }
     }
 
