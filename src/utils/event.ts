@@ -1,10 +1,11 @@
 import { InvokeTransactionReceiptResponse, num, shortString } from "starknet";
 
+// events are keyed by the poseidon hash of the event name
 export enum DojoEvents {
-  GameCreated = "GameCreated",
-  GameOver = "GameOver",
-  PlayerJoined = "PlayerJoined",
-  PlayerAttacked = "PlayerAttacked",
+  GameCreated = "0x230f942bb2087887c3b1dd964c716614bb6df172214f22409fefb734d96a4d2",
+  GameOver = "0x165460ded86991fa560a0d331810f83651da90c5df6d4b61357c3b3807ff41c",
+  PlayerJoined = "0x214916ce0265d355fd91110809ffba7b5e672b108a8beea3dd235818431264b",
+  PlayerAttacked = "0xbd6fc100b1379e91b7597179bead271adc63454e770ed90bc9b66247a86c84",
 }
 
 export interface BaseEventData {
@@ -35,9 +36,7 @@ export const parseEvent = (
   receipt: InvokeTransactionReceiptResponse,
   eventType: DojoEvents,
 ): BaseEventData => {
-  const raw = receipt.events?.find(
-    (e) => shortString.decodeShortString(e.keys[0]) === eventType,
-  );
+  const raw = receipt.events?.find((e) => e.keys[0] === eventType);
 
   if (!raw) {
     throw new Error(`event not found`);

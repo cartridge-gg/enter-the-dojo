@@ -115,7 +115,7 @@ export const Hero = ({
   const uDied = useCallback(() => {
     setState(PlayerState.DEATH);
   }, []);
-  console.log(address);
+
   return (
     <>
       <Flex
