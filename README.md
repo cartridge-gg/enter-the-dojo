@@ -41,3 +41,12 @@ torii
 # Start frontend
 yarn && yarn dev
 ```
+
+### How to play
+
+To play the game from the frontend, open up two browsers - one in normal mode
+and one in incognito mode. Create burner wallets in both windows. Burner wallets
+are tied to the current browser profile being used thus the reason for two
+windows. Create a game in one window and in the other window click on
+`Available Games` to find that game and join. Now take turns between the two
+windows to battle!
