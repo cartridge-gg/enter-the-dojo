@@ -111,11 +111,11 @@ function findPlayer(
   playerAddress: string,
 ): Health | undefined {
   // we know player health is keyed by (gameId, playerAddress)
-  const healthNode = data.entities?.edges.find(
+  const healthEdge = data.entities?.edges.find(
     (edge) => edge.node.keys[1] === playerAddress,
   );
 
-  return healthNode?.node.components.find(
+  return healthEdge?.node.components.find(
     (component) => component.__typename === "Health",
   ) as Health;
 }

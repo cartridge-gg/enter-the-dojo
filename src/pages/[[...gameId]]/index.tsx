@@ -85,7 +85,7 @@ export default function Home() {
             <HStack
               position="relative"
               top="100px"
-              gap="80px"
+              gap="40px"
               visibility={gameId ? "visible" : "hidden"}
             >
               <Hero

@@ -1,38 +1,3 @@
-# Game entity
-query GameEntity($id: ID!) {
-  entity(id: $id) {
-    components {
-      __typename
-      ... on Game {
-        player_one
-        player_two
-        next_to_move
-        num_moves
-        winner
-      }
-    }
-  }
-}
-
-query PlayersEntity($playerOneId: ID!, $playerTwoId: ID!) {
-  playerOne: entity(id: $playerOneId) {
-    components {
-      __typename
-      ... on Health {
-        amount
-      }
-    }
-  }
-  playerTwo: entity(id: $playerTwoId) {
-    components {
-      __typename
-      ... on Health {
-        amount
-      }
-    }
-  }
-}
-
 query Entities($gameId: String!) {
   entities(keys: [$gameId]) {
     totalCount

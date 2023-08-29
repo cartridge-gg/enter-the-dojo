@@ -367,10 +367,7 @@ export type SystemEdge = {
 };
 
 export type AvailableGamesQueryVariables = Exact<{
-  first?: InputMaybe<Scalars["Int"]>;
-  after?: InputMaybe<Scalars["Cursor"]>;
-  last?: InputMaybe<Scalars["Int"]>;
-  before?: InputMaybe<Scalars["Cursor"]>;
+  limit: Scalars["Int"];
 }>;
 
 export type AvailableGamesQuery = {
@@ -381,60 +378,16 @@ export type AvailableGamesQuery = {
     edges?: Array<{
       __typename?: "GameEdge";
       cursor: any;
-      node?: { __typename?: "Game"; player_one?: any | null } | null;
+      node?: {
+        __typename?: "Game";
+        player_one?: any | null;
+        entity?: {
+          __typename?: "Entity";
+          keys?: Array<string | null> | null;
+        } | null;
+      } | null;
     } | null> | null;
   } | null;
-};
-
-export type GameEntityQueryVariables = Exact<{
-  id: Scalars["ID"];
-}>;
-
-export type GameEntityQuery = {
-  __typename?: "Query";
-  entity: {
-    __typename?: "Entity";
-    components?: Array<
-      | {
-          __typename: "Game";
-          player_one?: any | null;
-          player_two?: any | null;
-          next_to_move?: any | null;
-          num_moves?: any | null;
-          winner?: any | null;
-        }
-      | { __typename: "Health" }
-      | { __typename: "Special" }
-      | null
-    > | null;
-  };
-};
-
-export type PlayersEntityQueryVariables = Exact<{
-  playerOneId: Scalars["ID"];
-  playerTwoId: Scalars["ID"];
-}>;
-
-export type PlayersEntityQuery = {
-  __typename?: "Query";
-  playerOne: {
-    __typename?: "Entity";
-    components?: Array<
-      | { __typename: "Game" }
-      | { __typename: "Health"; amount?: any | null }
-      | { __typename: "Special" }
-      | null
-    > | null;
-  };
-  playerTwo: {
-    __typename?: "Entity";
-    components?: Array<
-      | { __typename: "Game" }
-      | { __typename: "Health"; amount?: any | null }
-      | { __typename: "Special" }
-      | null
-    > | null;
-  };
 };
 
 export type EntitiesQueryVariables = Exact<{
@@ -469,19 +422,16 @@ export type EntitiesQuery = {
 };
 
 export const AvailableGamesDocument = `
-    query AvailableGames($first: Int, $after: Cursor, $last: Int, $before: Cursor) {
-  gameComponents(
-    first: $first
-    after: $after
-    last: $last
-    before: $before
-    where: {player_two: "0x0"}
-  ) {
+    query AvailableGames($limit: Int!) {
+  gameComponents(first: $limit, where: {player_two: "0x0"}) {
     totalCount
     edges {
       cursor
       node {
         player_one
+        entity {
+          keys
+        }
       }
     }
   }
@@ -491,158 +441,41 @@ export const useAvailableGamesQuery = <
   TData = AvailableGamesQuery,
   TError = unknown,
 >(
-  variables?: AvailableGamesQueryVariables,
+  variables: AvailableGamesQueryVariables,
   options?: UseQueryOptions<AvailableGamesQuery, TError, TData>,
 ) =>
   useQuery<AvailableGamesQuery, TError, TData>(
-    variables === undefined
-      ? ["AvailableGames"]
-      : ["AvailableGames", variables],
+    ["AvailableGames", variables],
     useFetchData<AvailableGamesQuery, AvailableGamesQueryVariables>(
       AvailableGamesDocument,
     ).bind(null, variables),
     options,
   );
 
-useAvailableGamesQuery.getKey = (variables?: AvailableGamesQueryVariables) =>
-  variables === undefined ? ["AvailableGames"] : ["AvailableGames", variables];
+useAvailableGamesQuery.getKey = (variables: AvailableGamesQueryVariables) => [
+  "AvailableGames",
+  variables,
+];
 export const useInfiniteAvailableGamesQuery = <
   TData = AvailableGamesQuery,
   TError = unknown,
 >(
-  variables?: AvailableGamesQueryVariables,
+  variables: AvailableGamesQueryVariables,
   options?: UseInfiniteQueryOptions<AvailableGamesQuery, TError, TData>,
 ) => {
   const query = useFetchData<AvailableGamesQuery, AvailableGamesQueryVariables>(
     AvailableGamesDocument,
   );
   return useInfiniteQuery<AvailableGamesQuery, TError, TData>(
-    variables === undefined
-      ? ["AvailableGames.infinite"]
-      : ["AvailableGames.infinite", variables],
+    ["AvailableGames.infinite", variables],
     (metaData) => query({ ...variables, ...(metaData.pageParam ?? {}) }),
     options,
   );
 };
 
 useInfiniteAvailableGamesQuery.getKey = (
-  variables?: AvailableGamesQueryVariables,
-) =>
-  variables === undefined
-    ? ["AvailableGames.infinite"]
-    : ["AvailableGames.infinite", variables];
-export const GameEntityDocument = `
-    query GameEntity($id: ID!) {
-  entity(id: $id) {
-    components {
-      __typename
-      ... on Game {
-        player_one
-        player_two
-        next_to_move
-        num_moves
-        winner
-      }
-    }
-  }
-}
-    `;
-export const useGameEntityQuery = <TData = GameEntityQuery, TError = unknown>(
-  variables: GameEntityQueryVariables,
-  options?: UseQueryOptions<GameEntityQuery, TError, TData>,
-) =>
-  useQuery<GameEntityQuery, TError, TData>(
-    ["GameEntity", variables],
-    useFetchData<GameEntityQuery, GameEntityQueryVariables>(
-      GameEntityDocument,
-    ).bind(null, variables),
-    options,
-  );
-
-useGameEntityQuery.getKey = (variables: GameEntityQueryVariables) => [
-  "GameEntity",
-  variables,
-];
-export const useInfiniteGameEntityQuery = <
-  TData = GameEntityQuery,
-  TError = unknown,
->(
-  variables: GameEntityQueryVariables,
-  options?: UseInfiniteQueryOptions<GameEntityQuery, TError, TData>,
-) => {
-  const query = useFetchData<GameEntityQuery, GameEntityQueryVariables>(
-    GameEntityDocument,
-  );
-  return useInfiniteQuery<GameEntityQuery, TError, TData>(
-    ["GameEntity.infinite", variables],
-    (metaData) => query({ ...variables, ...(metaData.pageParam ?? {}) }),
-    options,
-  );
-};
-
-useInfiniteGameEntityQuery.getKey = (variables: GameEntityQueryVariables) => [
-  "GameEntity.infinite",
-  variables,
-];
-export const PlayersEntityDocument = `
-    query PlayersEntity($playerOneId: ID!, $playerTwoId: ID!) {
-  playerOne: entity(id: $playerOneId) {
-    components {
-      __typename
-      ... on Health {
-        amount
-      }
-    }
-  }
-  playerTwo: entity(id: $playerTwoId) {
-    components {
-      __typename
-      ... on Health {
-        amount
-      }
-    }
-  }
-}
-    `;
-export const usePlayersEntityQuery = <
-  TData = PlayersEntityQuery,
-  TError = unknown,
->(
-  variables: PlayersEntityQueryVariables,
-  options?: UseQueryOptions<PlayersEntityQuery, TError, TData>,
-) =>
-  useQuery<PlayersEntityQuery, TError, TData>(
-    ["PlayersEntity", variables],
-    useFetchData<PlayersEntityQuery, PlayersEntityQueryVariables>(
-      PlayersEntityDocument,
-    ).bind(null, variables),
-    options,
-  );
-
-usePlayersEntityQuery.getKey = (variables: PlayersEntityQueryVariables) => [
-  "PlayersEntity",
-  variables,
-];
-export const useInfinitePlayersEntityQuery = <
-  TData = PlayersEntityQuery,
-  TError = unknown,
->(
-  variables: PlayersEntityQueryVariables,
-  options?: UseInfiniteQueryOptions<PlayersEntityQuery, TError, TData>,
-) => {
-  const query = useFetchData<PlayersEntityQuery, PlayersEntityQueryVariables>(
-    PlayersEntityDocument,
-  );
-  return useInfiniteQuery<PlayersEntityQuery, TError, TData>(
-    ["PlayersEntity.infinite", variables],
-    (metaData) => query({ ...variables, ...(metaData.pageParam ?? {}) }),
-    options,
-  );
-};
-
-useInfinitePlayersEntityQuery.getKey = (
-  variables: PlayersEntityQueryVariables,
-) => ["PlayersEntity.infinite", variables];
+  variables: AvailableGamesQueryVariables,
+) => ["AvailableGames.infinite", variables];
 export const EntitiesDocument = `
     query Entities($gameId: String!) {
   entities(keys: [$gameId]) {

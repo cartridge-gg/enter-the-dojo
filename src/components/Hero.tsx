@@ -100,24 +100,22 @@ export const Hero = ({
     }
   }, [state]);
 
-  const attackLight = useCallback(() => {
+  const attackLight = useCallback(async () => {
     setState(PlayerState.ATTACK_LIGHT);
-    setTimeout(() => {
-      setState(PlayerState.IDLE);
-    }, 1000);
+    await new Promise((r) => setTimeout(r, 1000));
+    setState(PlayerState.IDLE);
   }, []);
 
-  const attackHeavy = useCallback(() => {
+  const attackHeavy = useCallback(async () => {
     setState(PlayerState.ATTACK_HEAVY);
-    setTimeout(() => {
-      setState(PlayerState.IDLE);
-    }, 1000);
+    await new Promise((r) => setTimeout(r, 1000));
+    setState(PlayerState.IDLE);
   }, []);
 
   const uDied = useCallback(() => {
     setState(PlayerState.DEATH);
   }, []);
-
+  console.log(address);
   return (
     <>
       <Flex
@@ -129,12 +127,14 @@ export const Hero = ({
         position="relative"
       >
         <>
-          <VStack gap="0" align="flex-start">
-            <Text transform={isMirrored ? "scaleX(-1)" : ""} fontSize="10px">
-              {isYou ? "You" : address ? formatAddress(address) : "..."}
-            </Text>
-            <HealthBar health={health || 0} />
-          </VStack>
+          {game?.playerTwo !== "0x0" && (
+            <VStack gap="0" align="flex-start">
+              <Text transform={isMirrored ? "scaleX(-1)" : ""} fontSize="10px">
+                {isYou ? "You" : address ? formatAddress(address) : "Waiting"}
+              </Text>
+              <HealthBar health={health || 0} />
+            </VStack>
+          )}
 
           {isYou && isAction && state !== PlayerState.DEATH && (
             <HStack
@@ -146,11 +146,11 @@ export const Hero = ({
                 size="sm"
                 onClick={async () => {
                   if (gameId) {
-                    attackLight();
+                    await attackLight();
                     const result = await attack(gameId[0], Action.Light);
                   }
                 }}
-                isLoading={isPending}
+                isDisabled={state !== PlayerState.IDLE || isPending}
               >
                 Light
               </Button>
@@ -158,11 +158,11 @@ export const Hero = ({
                 size="sm"
                 onClick={async () => {
                   if (gameId) {
-                    attackHeavy();
+                    await attackHeavy();
                     const result = await attack(gameId[0], Action.Heavy);
                   }
                 }}
-                isLoading={isPending}
+                isDisabled={state !== PlayerState.IDLE || isPending}
               >
                 Heavy
               </Button>
@@ -177,7 +177,7 @@ export const Hero = ({
 const HealthBar = ({ health }: { health: number }) => {
   const percentage = `${(health / MAX_HEALTH) * 100}%`;
   return (
-    <HStack h="8px" w="100px" bgColor="gray.200">
+    <HStack h="8px" w="80px" bgColor="gray.200">
       <Box h="full" w={percentage} bgColor="green.400" />
     </HStack>
   );

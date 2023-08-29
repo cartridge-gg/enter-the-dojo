@@ -1,3 +1,5 @@
+![Enter the Dojo](.github/etd.png)
+
 # Enter the Dojo
 
 Welcome to Enter the Dojo, a super simple on-chain game built on Starknet using
