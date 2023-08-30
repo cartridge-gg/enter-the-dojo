@@ -7,7 +7,6 @@ mod create {
 
     use dojo::world::Context;
 
-    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health};
     use enter_the_dojo::constants::{MAX_HEALTH};
@@ -32,7 +31,7 @@ mod create {
         let game_id = ctx.world.uuid();
 
         // create game entity
-        set !(
+        set!(
             ctx.world,
             (Game {
                 game_id,
@@ -46,10 +45,10 @@ mod create {
 
         // create player entity
         // TODO: Add special component
-        set !(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }))
+        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }))
 
         // emit game created
-        emit !(ctx.world, GameCreated { game_id, creator: player_id });
+        emit!(ctx.world, GameCreated { game_id, creator: player_id });
 
         ()
     }
@@ -64,7 +63,6 @@ mod join {
 
     use dojo::world::Context;
 
-    use enter_the_dojo::events::emit;
     use enter_the_dojo::components::game::Game;
     use enter_the_dojo::components::player::{Health};
     use enter_the_dojo::constants::{MAX_HEALTH};
@@ -84,21 +82,21 @@ mod join {
     fn execute(ctx: Context, game_id: u32) {
         let player_id = ctx.origin;
 
-        let mut game = get !(ctx.world, game_id, (Game));
+        let mut game = get!(ctx.world, game_id, (Game));
         assert(game.player_one != player_id, 'cannot join own game');
         assert(game.player_two.is_zero(), 'game is full');
 
         // update game entity
         game.player_two = player_id;
         game.next_to_move = game.player_one;
-        set !(ctx.world, (game));
+        set!(ctx.world, (game));
 
         // create player entity
         // TODO: Add special component
-        set !(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }), )
+        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }), )
 
         // emit player joined
-        emit !(ctx.world, PlayerJoined { game_id, player_id });
+        emit!(ctx.world, PlayerJoined { game_id, player_id });
 
         ()
     }

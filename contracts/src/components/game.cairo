@@ -10,21 +10,3 @@ struct Game {
     num_moves: u32,
     winner: ContractAddress,
 }
-
-trait GameTrait {
-    fn is_playing(self: @Game, player_id: ContractAddress) -> bool;
-}
-
-impl GameImpl of GameTrait {
-    fn is_playing(self: @Game, player_id: ContractAddress) -> bool {
-        if player_id == *self.player_one {
-            return true;
-        }
-
-        if player_id == *self.player_two {
-            return true;
-        }
-
-        false
-    }
-}

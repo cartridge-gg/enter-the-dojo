@@ -1,23 +1,21 @@
-#[derive(Serde, Copy, Drop, PartialEq)]
-enum Action {
-    Light: (),
-    Heavy: (),
-}
-
 #[system]
 mod attack {
     use array::ArrayTrait;
     use box::BoxTrait;
     use traits::Into;
-    use super::Action;
     use starknet::{ContractAddress, Zeroable};
 
     use dojo::world::Context;
 
-    use enter_the_dojo::events::emit;
-    use enter_the_dojo::components::game::{Game, GameTrait};
+    use enter_the_dojo::components::game::{Game};
     use enter_the_dojo::components::player::{Health};
     use enter_the_dojo::constants::{LIGHT_DAMAGE, HEAVY_DAMAGE, LIGHT_CHANCE, HEAVY_CHANCE};
+
+    #[derive(Serde, Copy, Drop, PartialEq)]
+    enum Action {
+        Light: (),
+        Heavy: (),
+    }
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -25,7 +23,6 @@ mod attack {
         PlayerAttacked: PlayerAttacked,
         GameOver: GameOver,
     }
-
 
     #[derive(Drop, starknet::Event)]
     struct PlayerAttacked {
@@ -48,7 +45,7 @@ mod attack {
         let player_id = ctx.origin;
 
         // read game entity
-        let mut game = get !(ctx.world, game_id, (Game));
+        let mut game = get!(ctx.world, game_id, (Game));
 
         // game condition checking
         assert(game.winner.is_zero(), 'game already over');
@@ -69,7 +66,7 @@ mod attack {
 
         // only retrieve health for opponent player as their 
         // special component does not get updated
-        let mut health = get !(ctx.world, (game_id, opponent_id).into(), (Health));
+        let mut health = get!(ctx.world, (game_id, opponent_id).into(), (Health));
 
         // check if killing blow
         let killing_blow = if damage >= health.amount {
@@ -81,10 +78,10 @@ mod attack {
 
         // update opponent health
         health.amount -= damage;
-        set !(ctx.world, (health));
+        set!(ctx.world, (health));
 
         // emit player attacked
-        emit !(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
+        emit!(ctx.world, PlayerAttacked { game_id, player_id, opponent_id, action, damage });
 
         // update game state
         game.next_to_move = opponent_id;
@@ -93,13 +90,13 @@ mod attack {
             .winner =
                 if killing_blow {
                     // emit game over 
-                    emit !(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
+                    emit!(ctx.world, GameOver { game_id, winner: player_id, loser: opponent_id });
 
                     player_id
                 } else {
                     Zeroable::zero()
                 };
-        set !(ctx.world, (game));
+        set!(ctx.world, (game));
     }
 
     fn calculate_damage(seed: felt252, action: Action) -> u8 {
