@@ -51,8 +51,6 @@ mod attack {
         assert(game.winner.is_zero(), 'game already over');
         assert(game.next_to_move == player_id, 'not your turn');
 
-        // TODO: Add special action logic here
-
         // cacluate damage, use VRF for seed in the future
         let seed = starknet::get_tx_info().unbox().transaction_hash;
         let mut damage = calculate_damage(seed, action);

@@ -20,7 +20,7 @@ Install the latest Dojo toolchain from here
 
 ```bash
 # Start Katana
-katana --seed 0
+katana --disable-fee
 
 # cd into contracts dir
 cd contracts

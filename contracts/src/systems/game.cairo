@@ -41,11 +41,10 @@ mod create {
                 num_moves: Zeroable::zero(),
                 winner: Zeroable::zero(),
             })
-        )
+        );
 
         // create player entity
-        // TODO: Add special component
-        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }))
+        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }));
 
         // emit game created
         emit!(ctx.world, GameCreated { game_id, creator: player_id });
@@ -92,8 +91,7 @@ mod join {
         set!(ctx.world, (game));
 
         // create player entity
-        // TODO: Add special component
-        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }), )
+        set!(ctx.world, (Health { game_id, player_id, amount: MAX_HEALTH }));
 
         // emit player joined
         emit!(ctx.world, PlayerJoined { game_id, player_id });

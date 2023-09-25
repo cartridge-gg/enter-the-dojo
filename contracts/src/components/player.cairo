@@ -8,5 +8,4 @@ struct Health {
     player_id: ContractAddress,
     amount: u8
 }
-// TODO: Implement special component
 
