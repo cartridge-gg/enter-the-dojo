@@ -62,15 +62,19 @@ export function DojoProvider({
       setError(undefined);
 
       return account
-        .execute({
-          contractAddress: WORLD_ADDRESS,
-          entrypoint: "execute",
-          calldata: CallData.compile([
-            shortString.encodeShortString(systemName),
-            params.length,
-            ...params,
-          ]),
-        })
+        .execute(
+          {
+            contractAddress: WORLD_ADDRESS,
+            entrypoint: "execute",
+            calldata: CallData.compile([
+              shortString.encodeShortString(systemName),
+              params.length,
+              ...params,
+            ]),
+          },
+          undefined,
+          { maxFee: 0 },
+        )
         .then(async ({ transaction_hash }) => {
           await account.waitForTransaction(transaction_hash, {
             retryInterval: 1000,
