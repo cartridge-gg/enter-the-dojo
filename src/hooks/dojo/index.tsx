@@ -11,6 +11,7 @@ import {
   BigNumberish,
   CallData,
   shortString,
+  TransactionFinalityStatus,
   TransactionStatus,
 } from "starknet";
 import { useBurner } from "../useBurner";
@@ -73,7 +74,7 @@ export function DojoProvider({
         .then(async ({ transaction_hash }) => {
           await account.waitForTransaction(transaction_hash, {
             retryInterval: 1000,
-            successStates: [TransactionStatus.ACCEPTED_ON_L2],
+            successStates: [TransactionFinalityStatus.ACCEPTED_ON_L2],
           });
 
           console.log("transaction hash: " + transaction_hash);

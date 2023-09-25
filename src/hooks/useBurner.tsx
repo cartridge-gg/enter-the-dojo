@@ -6,6 +6,7 @@ import {
   hash,
   RpcProvider,
   stark,
+  TransactionFinalityStatus,
   TransactionStatus,
 } from "starknet";
 import Storage from "@/utils/storage";
@@ -45,7 +46,7 @@ export const useBurner = () => {
       admin.getTransactionReceipt(storage[firstAddr].deployTx).catch(() => {
         setAccount(undefined);
         Storage.remove("burners");
-        throw new Error("burners not deployed, chain may have restarted");
+        console.log("burners not deployed, resetting local storage");
       });
 
       // set active account
@@ -148,6 +149,6 @@ const prefundAccount = async (address: string, account: Account) => {
 
   return await account.waitForTransaction(transaction_hash, {
     retryInterval: 1000,
-    successStates: [TransactionStatus.ACCEPTED_ON_L2],
+    successStates: [TransactionFinalityStatus.ACCEPTED_ON_L2],
   });
 };

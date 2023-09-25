@@ -2,7 +2,7 @@
 set -euo pipefail
 pushd $(dirname "$0")/..
 
-export WORLD_ADDRESS="0x8a0c92088c0698f8a38906693a34881547e8b4dfcfcafdbc0efc42464e239b";
+export WORLD_ADDRESS="0x5e74e1e03139b9eb3d1b742691d8d966b438b599634cae3193d58636528d913";
 
 # enable system -> component authorizations
 CREATE_COMPONENTS=("Game" "Health" "Special")
