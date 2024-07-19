@@ -16,7 +16,7 @@ and has a potential to miss. Choose your attacks wisely!
 ### Development
 
 Install the Dojo toolchain, make sure to grab version 0.2.2
-[installation guide](https://book.dojoengine.org/getting-started/quick-start.html)
+[installation guide](https://book.dojoengine.org/getting-started)
 
 ```bash
 # Install Dojo binaries
