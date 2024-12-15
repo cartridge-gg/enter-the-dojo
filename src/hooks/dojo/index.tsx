@@ -13,18 +13,30 @@ import {
   shortString,
   TransactionFinalityStatus,
   TransactionStatus,
+  RpcProvider
 } from "starknet";
-import { useBurner } from "../useBurner";
+import { useBurner } from "@dojoengine/create-burner";
 
 export const SCALING_FACTOR = 10000;
 export const REFETCH_INTERVAL = 1000; // really need graphql subscriptions...
 
+const provider = new RpcProvider({
+  nodeUrl: process.env.NEXT_PUBLIC_RPC_ENDPOINT!,
+});
+
+const masterAccount = new Account(
+  provider,
+  process.env.NEXT_PUBLIC_ADMIN_ADDRESS!,
+  process.env.NEXT_PUBLIC_ADMIN_PRIVATE_KEY!,
+);
+
+
 interface DojoInterface {
-  account?: Account;
+  account: Account | null;
   isPending: boolean;
   isBurnerDeploying: boolean;
   error?: Error;
-  createBurner: () => Promise<String>;
+  createBurner: () => Promise<Account>;
   execute: (systemName: string, params: BigNumberish[]) => Promise<string>;
   call: () => void;
 }
@@ -50,7 +62,10 @@ export function DojoProvider({
     account,
     create: createBurner,
     isDeploying: isBurnerDeploying,
-  } = useBurner();
+  } = useBurner({
+    masterAccount,
+    accountClassHash: process.env.NEXT_PUBLIC_ACCOUNT_CLASS_HASH!
+  });
 
   const execute = useCallback(
     async (systemName: string, params: BigNumberish[]) => {
